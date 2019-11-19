@@ -13,9 +13,9 @@ data_file_name = "K+Filtered_HERMES+C.csv"
 #name of the export csv. Particle type is appended as a prefix
 export_file_name = "thumbnail"
 #import file location (location of data files)
-data_location = "C:/Users/Ajidot/Desktop/vt_stuff/info_viz/project/Particle_CinemaExport_ToyData"
+data_location = "C:/Users/ajido/Desktop/vt stuff/info visualization/project"
 #export file location
-export_location = "C:/Users/Ajidot/Desktop/vt_stuff/info_viz/project/HERMES_thumbnail_generation/Export"
+export_location = "C:/Users/ajido/Desktop/vt stuff/info visualization/project/HERMES_thumbnail_generation/Export"
 #column names to generate thumbnails by
 interest_columns = [
 	"x",
@@ -42,6 +42,7 @@ thumbnail_num = 6
 
 x_axis_labels = [0, 0.5, 1, 1.5]
 y_axis_labels = [0, 0.5, 1, 1.5, 2]
+scale_arr = [1.5, 1, 1]
 #####################################
 
 #remove any tmp files
@@ -297,7 +298,7 @@ for i in range(thumbnail_num):
 	
 	cntrn = Contour(pvin)
 	cntrn.ComputeScalars = True
-	cntrn.Isosurfaces = [1, 1.7, 3, 6, 10]
+	cntrn.Isosurfaces = [1, 1.2, 1.4, 1.6, 2]
 	
 	rep = Show(cntrn)
 	dp = GetDisplayProperties()
@@ -322,6 +323,8 @@ for i in range(thumbnail_num):
 	dp.DataAxesGrid.YTitleBold = 1
 	dp.DataAxesGrid.XTitleFontSize = 16
 	dp.DataAxesGrid.YTitleFontSize = 16
+	
+	dp.Scale = scale_arr
 	
 	rep.ColorArrayName = 'density'
 	arr = cntrn.PointData.GetArray('density')
