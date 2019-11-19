@@ -40,8 +40,8 @@ filter_above = 0
 #number of thumbnails to generate
 thumbnail_num = 6
 
-x_axis_range = []
-y_axis_range = []
+x_axis_labels = [0, 0.5, 1, 1.5]
+y_axis_labels = [0, 0.5, 1, 1.5, 2]
 #####################################
 
 #remove any tmp files
@@ -49,6 +49,22 @@ tmpfname = export_location + "/tmp.txt"
 if os.path.exists(tmpfname):
 	os.remove(tmpfname)
 
+view = GetActiveView()
+#create a background image
+backbox = Box()
+backbox.XLength = 2
+backbox.YLength = 3.2
+backbox.ZLength = 1
+backbox.Center = [0.75, 1.0, -1.0]
+dpbox = GetDisplayProperties()
+dpbox.DiffuseColor = [0.0, 0.0196078431372549, 0.403921568627451]
+Show(backbox)
+Render()
+
+view.CameraPosition[2] *= 0.5
+view.CameraPosition[1] -= 0.2
+view.OrientationAxesVisibility = 0
+	
 #get data
 reader = CSVReader(FileName= data_location + '/' + data_file_name)
 Hide()
@@ -98,7 +114,6 @@ ppf_init = ProgrammableFilter(reader)
 ppf_init.Script = qzp_filter.substitute(scn=interest_columns[0], fv=qzp_filter_val, vo=filter_above)
 
 #set up view and heat color map
-view = GetActiveView()
 view.ViewSize = [350, 400]
 
 lr = lookuptable.vtkPVLUTReader()
@@ -291,11 +306,26 @@ for i in range(thumbnail_num):
 	dp.DataAxesGrid.GridAxesVisibility = 1
 	dp.DataAxesGrid.XTitle = interest_columns[1]
 	dp.DataAxesGrid.YTitle = interest_columns[2]
+	
+	dp.DataAxesGrid.XAxisLabels = x_axis_labels
+	dp.DataAxesGrid.XAxisUseCustomLabels = 1
+	dp.DataAxesGrid.YAxisLabels = y_axis_labels
+	dp.DataAxesGrid.YAxisUseCustomLabels = 1
+	
+	dp.DataAxesGrid.GridColor = [0.5019607843137255, 0.9529411764705882, 1.0]
+	dp.DataAxesGrid.AxesToLabel = 7
+	dp.DataAxesGrid.ShowGrid = 1
+	dp.DataAxesGrid.ShowEdges = 0
+	dp.DataAxesGrid.ShowTicks = 0
+	
+	dp.DataAxesGrid.XTitleBold = 1
+	dp.DataAxesGrid.YTitleBold = 1
+	dp.DataAxesGrid.XTitleFontSize = 16
+	dp.DataAxesGrid.YTitleFontSize = 16
+	
 	rep.ColorArrayName = 'density'
 	arr = cntrn.PointData.GetArray('density')
 	lut = lr.GetLUT(arr, 'Heat')
 	rep.LookupTable = lut
-	if i == 0:
-		ResetCamera()
 	WriteImage(export_location + '/' + particle_type + export_file_name + str(i) + '.png')
 	Hide(cntrn)
