@@ -3,6 +3,7 @@ import os
 import numpy as np
 import random
 from string import Template
+import shutil
 
 ###########User Input Fields##########
 
@@ -50,6 +51,11 @@ tmpfname = export_location + "/tmp.txt"
 if os.path.exists(tmpfname):
 	os.remove(tmpfname)
 
+exportDirPath = export_location + "/" + particle_type + export_file_name
+if os.path.exists(exportDirPath):
+	shutil.rmtree(exportDirPath)
+os.mkdir(exportDirPath)
+	
 view = GetActiveView()
 #create a background image
 backbox = Box()
@@ -103,8 +109,8 @@ for i in range(qzp.GetSize()):
 			newlist[j].append(row_at_i.GetValue(j).ToFloat())
 
 final_sorted_data = np.array(newlist, dtype=float)
-sort_indices = np.argsort(final_sorted_data[sort_col_index])
-final_sorted_data = final_sorted_data[:, sort_indices]
+#sort_indices = np.argsort(final_sorted_data[sort_col_index])
+#final_sorted_data = final_sorted_data[:, sort_indices]
 
 for i in range(27):
 	output.RowData.append(final_sorted_data[i], self.GetInput().GetColumnName(i))
@@ -133,9 +139,11 @@ filenamePrefix = "$f_prefix"
 ptype = "$p_type"
 
 filename = scriptDirectory + '/tmp.txt'
-filename3 = scriptDirectory + '/' + ptype + filenamePrefix + 'Thumbnails.csv'
+dirname = scriptDirectory + '/' + ptype + filenamePrefix
+filename3 = scriptDirectory + '/' + ptype + filenamePrefix + '/' + ptype + filenamePrefix + 'Thumbnails.csv'
 targetColumns = $t_cols
 xycols = $xy_cols
+
 
 if not os.path.exists(filename):
 	f = open(filename, 'w+')
@@ -330,5 +338,5 @@ for i in range(thumbnail_num):
 	arr = cntrn.PointData.GetArray('density')
 	lut = lr.GetLUT(arr, 'Heat')
 	rep.LookupTable = lut
-	WriteImage(export_location + '/' + particle_type + export_file_name + str(i) + '.png')
+	WriteImage(exportDirPath + '/' + particle_type + export_file_name + str(i) + '.png')
 	Hide(cntrn)
