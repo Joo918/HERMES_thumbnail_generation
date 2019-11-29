@@ -17,7 +17,7 @@ export_file_name = "thumbnail"
 data_location = "C:/Users/ajido/Desktop/vt stuff/info visualization/project"
 #export file location
 export_location = "C:/Users/ajido/Desktop/vt stuff/info visualization/project/HERMES_thumbnail_generation/Export"
-#column names to generate thumbnails by
+#column names to generate thumbnails by (ignore 0th index for now.)
 interest_columns = [
 	"x",
 	"y",
@@ -46,11 +46,17 @@ y_axis_labels = [0, 0.5, 1, 1.5, 2]
 scale_arr = [1.5, 1, 1]
 #####################################
 
+#Add x, y vars to export names
+export_file_name = export_file_name + "_" + interest_columns[1] + "_" + interest_columns[2]
+
 #remove any tmp files
 tmpfname = export_location + "/tmp.txt"
 if os.path.exists(tmpfname):
 	os.remove(tmpfname)
-
+tmpfname2 = export_location + "/tmp2.txt"
+if os.path.exists(tmpfname2):
+	os.remove(tmpfname2)
+	
 exportDirPath = export_location + "/" + particle_type + export_file_name
 if os.path.exists(exportDirPath):
 	shutil.rmtree(exportDirPath)
@@ -240,8 +246,17 @@ if lastrun:
 	os.remove(filename)
 ''')
 
-density_filter = '''
+density_filter = Template('''
 import numpy as np
+import os
+
+scriptDirectory = "$s_dir"
+filename = scriptDirectory + '/tmp2.txt'
+
+if not os.path.exists(filename):
+	f = open(filename, 'w+')
+	f.write('999999999,-999999999')
+	f.close()
 
 n = 100
 x = self.GetInput().GetColumnByName('x_coord')
@@ -283,15 +298,36 @@ for coord in cell_dict.keys():
 
 output.RowData.append(np.array(newx, float), 'x')
 output.RowData.append(np.array(newy, float), 'y')
-output.RowData.append(np.array(newlist, float), 'density')
-'''
+densityArr = np.array(newlist, float)
+dmax = densityArr.max()
+dmin = densityArr.min()
 
+fr = open(filename, 'r')
+readDat = fr.read()
+readDatArr = readDat.split(",")
+curMin = float(readDatArr[0])
+curMax = float(readDatArr[1])
+fr.close()
+
+if dmax > curMax:
+	curMax = dmax
+if dmin < curMin:
+	curMin = dmin
+
+fr = open(filename, 'w')
+fr.write(str(curMin) + "," + str(curMax))
+fr.close()
+
+output.RowData.append(densityArr, 'density')
+''')
+
+pvins = []
 for i in range(thumbnail_num):
 	ppfn = ProgrammableFilter(ppf_init)
 	ppfn.Script = divn_filter.substitute(s_dir=export_location, f_prefix=export_file_name, p_type=particle_type, t_cols=cols_to_preserve, n=thumbnail_num, xy_cols=interest_columns[1:])
 	
 	ppfdn = ProgrammableFilter(ppfn)
-	ppfdn.Script = density_filter
+	ppfdn.Script = density_filter.substitute(s_dir=export_location)
 	
 	ttpn = TableToPoints(ppfdn)
 	ttpn.KeepAllDataArrays = True
@@ -304,9 +340,39 @@ for i in range(thumbnail_num):
 	pvin = PointVolumeInterpolator(Input=ttpn, Source='Bounded Volume')
 	pvin.UpdatePipeline()
 	
-	cntrn = Contour(pvin)
+	pvins.append(pvin)
+	
+	#WriteImage(exportDirPath + '/' + particle_type + export_file_name + str(i) + '.png')
+	#Hide(cntrn)
+
+
+densityTmp = open(tmpfname2, 'r')
+minmaxD = densityTmp.read()
+minmaxDArr = minmaxD.split(",")
+densityTmp.close()
+os.remove(tmpfname2)
+
+isoMin = float(minmaxDArr[0])
+isoMax = float(minmaxDArr[1])
+isoThres = np.array(range(5), dtype=float)/4 * (isoMax - isoMin) + isoMin
+isoThresList = isoThres.tolist()
+print("isosurface threshold = ")
+print(isoThresList)
+
+exportcontourlv = exportDirPath + "/contour_thresholds.txt"
+contour_f = open(exportcontourlv, 'w+')
+contour_f.write(str(isoThresList))
+contour_f.close()
+
+for i in range(len(pvins)):
+	cntrn = Contour(pvins[i])
 	cntrn.ComputeScalars = True
-	cntrn.Isosurfaces = [1, 1.2, 1.4, 1.6, 2]
+	cntrn.ComputeNormals = False
+	cntrn.ComputeGradients = False
+	#cntrn.Isosurfaces = [1, 1.2, 1.4, 1.6, 2]
+	
+	cntrn.Isosurfaces = isoThresList
+	#Show(cntrs[i])
 	
 	rep = Show(cntrn)
 	dp = GetDisplayProperties()
@@ -338,5 +404,8 @@ for i in range(thumbnail_num):
 	arr = cntrn.PointData.GetArray('density')
 	lut = lr.GetLUT(arr, 'Heat')
 	rep.LookupTable = lut
+	
 	WriteImage(exportDirPath + '/' + particle_type + export_file_name + str(i) + '.png')
 	Hide(cntrn)
+
+print("DONE!")
