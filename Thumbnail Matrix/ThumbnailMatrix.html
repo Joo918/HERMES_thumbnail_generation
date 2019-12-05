@@ -1,0 +1,232 @@
+<head>
+    <meta charset='utf-8' />
+    <title>Thumbnail Matrix</title>
+    <script src='https://d3js.org/d3.v3.min.js' charset='utf-8'></script>
+    <style type='text/css'>
+        /* Div Boundaries */
+        .matrixDiv{
+            /*outline:solid black;*/
+            width:50%;
+            height:35%;
+            margin: 0 auto;
+        }
+        .thumbnailDiv{
+            /*outline:solid black;*/
+            width:100%;
+            height:59%;
+            margin: 0 auto;
+        }
+        .dropDownDiv{
+            /*outline:solid black;*/
+            width:25%;
+            height:35%;
+            float: left;
+        }
+
+        /* Off cells */
+        .offCell{
+            border: 1px solid black;
+            background-color: #d95f02;
+        }
+        .offCell:hover{
+            background-color: yellow;
+        }
+
+        /* Gray Cells */
+        .gCell{
+            border: 1px solid black;
+            background-color: rgb(70, 70, 70);
+        }
+        /* On Cells */
+        .onCell{
+            border: 1px solid black;
+            background-color: #1b9e77;
+        }
+        .onCell:hover{
+            background-color: yellow;
+        }
+        /* Display Cells */
+        .dCell{
+            border: 1px solid black;
+            background-color: #7570b3;
+        }
+        /* Title Cells */
+        .tCell{
+            border: 1px solid rgb(0, 0, 0);
+            background-color: rgb(200, 200, 200);
+        }
+
+        select {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <p align='center'><strong>Thumbnail Matrix</strong></p>
+        <div id='Dropdowns' class='dropDownDiv'>
+            <center>Particle Type:</center>
+            <select id='ParticleSelect' onchange='updateCurrent()'>
+                <option>K+</option>
+                <option>K-</option>
+                <option>Pi+</option>
+                <option>Pi-</option>
+            </select>
+
+            <center>QZP Threshold:</center>
+            <select id='QzpSelect' onchange='updateCurrent()'>
+                <option>Above</option>
+                <option>Below</option>
+            </select>
+    </div>
+    <div id='Matrix' class='matrixDiv'></div>
+    <div id='ThumbnailView' class='thumbnailDiv'></div>
+
+    <script type='text/javascript'>
+        // Set which squares to highlight
+        // 0 = red, 1 = gray, 2 = green
+        var matColors = [[3, 3, 3, 3, 3, 3, 3, 3],
+                         [3, 1, 1, 1, 1, 1, 1, 1],
+                         [3, 2, 1, 1, 1, 1, 1, 1],
+                         [3, 2, 2, 1, 1, 1, 1, 1],
+                         [3, 2, 2, 2, 1, 1, 1, 1],
+                         [3, 2, 2, 2, 2, 1, 1, 1],
+                         [3, 2, 2, 2, 2, 2, 1, 1],
+                         [3, 2, 2, 2, 2, 2, 2, 1]];
+
+        // Labels used in the title cells
+        var matLabels = ['X','Y','Z(Pi+/-)','Z(K+/-)','P_hperp','Q^2','Epsilon'];
+
+        // Used for locating the correct picture files
+        var particleLabels = ['K+', 'K-', 'P+', 'P-'];
+        var QZPLabels = ['QzpA', 'QzpB'];
+
+        // Generate the boxes
+        for (var j = 0; j < matLabels.length+1; j++){
+                d3.select('#Matrix')
+                    .selectAll('MatrixCells' + j)
+                    .data(matColors[j])
+                    .enter()
+                    .append('svg')
+                    .attr('id', function(d, i){return 'cell_' + j + '_' + i}) // id reflects position on matrix
+                    .attr('width', (100/(matLabels.length+1) - 0.5) + '%')
+                    .attr('height', (100/(matLabels.length+1) - 0.5) + '%')
+                    .attr('class', function(d){ // Assign class based on matColors
+                        switch (d){
+                            case 0:
+                                return 'offCell';
+                            case 1:
+                                return 'gCell';
+                            case 2:
+                                return 'onCell';
+                            case 3:
+                                return 'tCell';
+                        }
+                    })
+                    .attr('transform', 'translate(0, -10)')
+                    .attr('onclick', 'updateThumbnails(this)'); // When some cells are pressed, update the thumbnail view
+        }
+
+        //console.log(document.getElementById('Matrix').childNodes);
+
+        // Lebel VARIABLES cell
+        d3.select('#cell_0_0').append('text')
+            .attr('font-size', '1vw')
+            .attr('font-weight', 'bold')
+            .attr('x', '50%')
+            .attr('y', '50%')
+            .attr('dominant-baseline', 'middle')
+            .attr('text-anchor', 'middle')
+            .text('VARIABLES');
+        // Label top and side title cells
+        for (var i = 1; i < 12; i++){
+            d3.select('#cell_0_' + i).append('text')
+                .attr('font-size', '1vw')
+                .attr('font-weight', 'bold')
+                .attr('x', '50%')
+                .attr('y', '50%')
+                .attr('dominant-baseline', 'middle')
+                .attr('text-anchor', 'middle')
+                .text(matLabels[i-1]);
+            
+            d3.select('#cell_' + i + '_0').append('text')
+                .attr('font-size', '1vw')
+                .attr('font-weight', 'bold')
+                .attr('x', '50%')
+                .attr('y', '50%')
+                .attr('dominant-baseline', 'middle')
+                .attr('text-anchor', 'middle')
+                .text(matLabels[i-1]);
+        }
+
+        for (var i = 0; i < 2; i++){
+            for (var j = 0; j < 5; j++){
+                d3.select('#ThumbnailView').append('img')
+                    .attr('id', 'Thumbnail' + (j + i * 5))
+                    .attr('width', '19.9%')
+                    .attr('height', '50%')
+                    .attr('style', 'border:0.5px solid gray');
+            }
+        }
+
+        // Keep track of which cell is currently being displayed
+        var displayCell = null;
+
+        // Updates thumbnail images
+        function updateThumbnails(cell){
+            // If the cell is "on"
+            if (cell.className.baseVal == 'onCell'){
+                // If there was a cell previously displayed, must turn that cell into an onCell
+                if (displayCell != null){
+                    d3.select(displayCell).attr('class', 'onCell');
+                }
+
+                // Update which cell is the display cell and update color
+                displayCell = '#' + cell.id;
+                d3.select(displayCell).attr('class', 'dCell');
+
+                // Split the id so that the indices can be acquired
+                var idSplit = cell.id.split('_');
+
+                var particle = particleLabels[document.getElementById('ParticleSelect').selectedIndex];
+                var QZPThreshold = QZPLabels[document.getElementById('QzpSelect').selectedIndex];
+
+                // Set the path to find the thumbnails
+                var path = 'Thumbnails/' + particle + '/' + QZPThreshold + '/';
+
+                // Update thumbnails being displayed
+                for(var i = 0; i < 10; i++){
+                    // Fetch column names with index, then use to create path to target
+                    var target = path + 'Thumbnail' + matLabels[idSplit[2]-1] + '_' + matLabels[idSplit[1]-1] + '_' + i + '.png';
+                    d3.select('#Thumbnail'+i).attr('src', target);
+                }
+            }
+        }
+
+        // A change in the dropdown menus results in new thumbnails for each cell on the matrix
+        // so current thumbnails need to be updated
+        function updateCurrent(){
+            if (displayCell != null){
+                // Update thumbnails already on display
+                
+                // Split the id so that the indices can be acquired
+                var idSplit = displayCell.split('_');
+                var particle = particleLabels[document.getElementById('ParticleSelect').selectedIndex];
+                var QZPThreshold = QZPLabels[document.getElementById('QzpSelect').selectedIndex];
+
+                // Set the path to find the thumbnails
+                var path = 'Thumbnails/' + particle + '/' + QZPThreshold + '/';
+
+                // Update thumbnails being displayed
+                for(var i = 0; i < 10; i++){
+                    // Fetch column names with index, then use to create path to target
+                    var target = path + 'Thumbnail' + matLabels[idSplit[2]-1] + '_' + matLabels[idSplit[1]-1] + '_' + i + '.png';
+                    d3.select('#Thumbnail'+i).attr('src', target);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
