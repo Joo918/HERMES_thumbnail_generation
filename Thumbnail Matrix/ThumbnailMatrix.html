@@ -7,19 +7,19 @@
         .matrixDiv{
             /*outline:solid black;*/
             width:50%;
-            height:35%;
+            height:25%;
             margin: 0 auto;
         }
         .thumbnailDiv{
             /*outline:solid black;*/
             width:100%;
-            height:59%;
+            height:70%;
             margin: 0 auto;
         }
         .dropDownDiv{
             /*outline:solid black;*/
             width:25%;
-            height:35%;
+            height:25%;
             float: left;
         }
 
@@ -73,7 +73,6 @@
                 <option>Pi+</option>
                 <option>Pi-</option>
             </select>
-            <br>
             <center>QZP Threshold:</center>
             <select id='QzpSelect' onchange='updateCurrent()'>
                 <option>Above</option>
@@ -84,7 +83,7 @@
                 Use the above drop down to choose which particle<br>
                 type to display and which QZP threshold to use,<br>
                 then click on the matrix cells to display thumbnails<br>
-                for that particular combination of variables
+                for that particular combination of variables.
             </center>
     </div>
     <div id='Matrix' class='matrixDiv'></div>
@@ -107,7 +106,7 @@
 
         // Used for locating the correct picture files
         var particleLabels = ['K+', 'K-', 'P+', 'P-'];
-        var QZPLabels = ['QzpA', 'QzpB'];
+        var QZPLabels = ['a', 'b'];
 
         // Generate the boxes
         for (var j = 0; j < matLabels.length+1; j++){
@@ -201,11 +200,15 @@
 
                 // Set the path to find the thumbnails
                 var path = 'Thumbnails/' + particle + '/' + QZPThreshold + '/';
+                var thumbFolder = particle + 'thumbnail_' + matLabels[idSplit[2]-1] + '_' +
+                    matLabels[idSplit[1]-1];
 
                 // Update thumbnails being displayed
                 for(var i = 0; i < 10; i++){
                     // Fetch column names with index, then use to create path to target
-                    var target = path + 'Thumbnail' + matLabels[idSplit[2]-1] + '_' + matLabels[idSplit[1]-1] + '_' + i + '.png';
+                    var target = path + thumbFolder + '/' + thumbFolder + i +'.png';
+
+                    /*'Thumbnail' + matLabels[idSplit[2]-1] + '_' + matLabels[idSplit[1]-1] + '_' + i + '.png';*/
                     d3.select('#Thumbnail'+i).attr('src', target);
                 }
             }
