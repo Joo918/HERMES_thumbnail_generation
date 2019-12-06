@@ -10,7 +10,7 @@ import math
 ###########User Input Fields##########
 
 #particle type
-particle_type = "K-"
+particle_type = "Pi-"
 #data file name
 data_file_name = particle_type + "Filtered_HERMES+C.csv"
 #name of the export csv. Particle type is appended as a prefix
