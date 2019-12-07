@@ -28,10 +28,6 @@
             border: 1px solid black;
             background-color: #d95f02;
         }
-        .offCell:hover{
-            background-color: yellow;
-        }
-
         /* Gray Cells */
         .gCell{
             border: 1px solid black;
@@ -96,16 +92,16 @@
                          [3, 1, 1, 1, 1, 1, 1, 1],
                          [3, 2, 1, 1, 1, 1, 1, 1],
                          [3, 2, 2, 1, 1, 1, 1, 1],
-                         [3, 2, 2, 2, 1, 1, 1, 1],
+                         [3, 2, 2, 1, 1, 1, 1, 1],
                          [3, 2, 2, 2, 2, 1, 1, 1],
                          [3, 2, 2, 2, 2, 2, 1, 1],
                          [3, 2, 2, 2, 2, 2, 2, 1]];
 
         // Labels used in the title cells
-        var matLabels = ['X','Y','Z(Pi+/-)','Z(K+/-)','P_hperp','Q^2','Epsilon'];
+        var matLabels = ['X','Y','Z(Pi)','Z(K)','P_hperp','Q^2','Epsilon'];
 
         // Used for locating the correct picture files
-        var particleLabels = ['K+', 'K-', 'P+', 'P-'];
+        var particleLabels = ['K+', 'K-', 'Pi+', 'Pi-'];
         var QZPLabels = ['QzpA', 'QzpB'];
 
         // Generate the boxes
@@ -166,6 +162,7 @@
                 .text(matLabels[i-1]);
         }
 
+        // Add thumbnail placeholders
         for (var i = 0; i < 2; i++){
             for (var j = 0; j < 5; j++){
                 d3.select('#ThumbnailView').append('img')
@@ -207,8 +204,6 @@
                 for(var i = 0; i < 10; i++){
                     // Fetch column names with index, then use to create path to target
                     var target = path + thumbFolder + '/' + thumbFolder + i +'.png';
-
-                    /*'Thumbnail' + matLabels[idSplit[2]-1] + '_' + matLabels[idSplit[1]-1] + '_' + i + '.png';*/
                     d3.select('#Thumbnail'+i).attr('src', target);
                 }
             }
@@ -217,6 +212,24 @@
         // A change in the dropdown menus results in new thumbnails for each cell on the matrix
         // so current thumbnails need to be updated
         function updateCurrent(){
+            // Most activate and deactive cells for the Z variable of oposite selected particle type
+            var pCells = ['#cell_3_1', '#cell_3_2', '#cell_5_3', '#cell_6_3', '#cell_7_3'];
+            var kCells = ['#cell_4_1', '#cell_4_2', '#cell_5_4', '#cell_6_4', '#cell_7_4'];
+
+            // K Particle, cancel Z(Pi) cells
+            if (document.getElementById('ParticleSelect').selectedIndex < 2) {
+                for (var i = 0; i < pCells.length; i++){
+                    d3.select(pCells[i]).attr('class', 'offCell');
+                    d3.select(kCells[i]).attr('class', 'onCell');
+                }
+            }
+            else { // Pi Particle, cancel Z(K) cells
+                for (var i = 0; i < pCells.length; i++){
+                    d3.select(pCells[i]).attr('class', 'onCell');
+                    d3.select(kCells[i]).attr('class', 'offCell');
+                }
+            }
+
             if (displayCell != null){
                 // Update thumbnails already on display
                 
@@ -227,15 +240,19 @@
 
                 // Set the path to find the thumbnails
                 var path = 'Thumbnails/' + particle + '/' + QZPThreshold + '/';
+                var thumbFolder = particle + 'thumbnail_' + matLabels[idSplit[2]-1] + '_' +
+                    matLabels[idSplit[1]-1];
 
                 // Update thumbnails being displayed
                 for(var i = 0; i < 10; i++){
                     // Fetch column names with index, then use to create path to target
-                    var target = path + 'Thumbnail' + matLabels[idSplit[2]-1] + '_' + matLabels[idSplit[1]-1] + '_' + i + '.png';
+                    var target = path + thumbFolder + '/' + thumbFolder + i +'.png';
                     d3.select('#Thumbnail'+i).attr('src', target);
                 }
             }
         }
+
+        updateCurrent();
     </script>
 </body>
 
