@@ -1,1 +1,14 @@
-.
+This README explains where to find all the scripts for the HERMES project.
+
+<FINAL REPORT>
+-> CS5764FinalReport.pdf
+
+<THUMBNAIL EXPORT SCRIPT>
+-> thumbnail_generation.py
+-> To run the script, please open Paraview5.6's python shell, press "run script", and select the above script.
+-> In the script, edit the user variables such as particle selection, qzp-range, and the import/export location.
+
+<MATRIX VIEW>
+-> Thumbnail Matrix/ThumbnailMatrix.html
+-> (The live version is available at: http://metagrid2.sv.vt.edu/~joo918/Thumbnail%20Matrix/ThumbnailMatrix.html)
+
